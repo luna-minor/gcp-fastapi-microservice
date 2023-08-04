@@ -1,0 +1,5 @@
+# Specific requirements the service needs to run
+
+fastapi==0.100.1
+uvicorn[standard]==0.23.2
+pydantic==2.1.1

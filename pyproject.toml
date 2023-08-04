@@ -1,0 +1,48 @@
+####################################################################
+# Formatting and Linting
+####################################################################
+
+[tool.black]
+line-length = 120
+target-version = ['py310', 'py311']
+exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+atomic = "True"
+profile = "black"
+filter_files = "True"
+
+
+####################################################################
+# Testing
+####################################################################
+
+[tool.pytest.ini_options]
+addopts = "--maxfail=2 --verbose --cov=."
+testpaths = [
+    "tests"
+]
+
+# Omit /builder/* so Coverage doesn't evaluate all installed packages when running on Cloud Build, etc.
+[tool.coverage.run]
+omit = [
+    "/builder/*",
+    "tests/*",
+    "venv/*",
+]
+
+[tool.coverage.report]
+show_missing = true
