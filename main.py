@@ -1,18 +1,25 @@
-from typing import Union
+""" Main module and entrypoint for the service."""
 
+import uvicorn
 from fastapi import FastAPI
-from fastapi import APIRouter
+from api.routers import health_check
 
-router = APIRouter()
 
-app = FastAPI()
+app = FastAPI(
+    debug=False,
+    title="MY_SERVICE",
+    description="MY_DESCRIPTION",
+    version="0.1.0",
+)
 
+
+app.include_router(health_check.router)
 
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
+def root():
+    """Root endpiont"""
+    return {"message": "Service is up", "status": "OK"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
