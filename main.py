@@ -1,25 +1,31 @@
 """ Main module and entrypoint for the service."""
+import logging
 
 import uvicorn
 from fastapi import FastAPI
+
 from api.routers import health_check
 
 
+logging.basicConfig(level=logging.DEBUG)
+
+# TODO: test deployment concurrency settings work with given Procfile
+# https://cloud.google.com/blog/topics/developers-practitioners/build-chat-server-cloud-run
+# https://towardsdatascience.com/deploy-a-dockerized-fastapi-app-to-google-cloud-platform-24f72266c7ef
+
+# TODO: improve logging so uses json format to match gcp log payloads (locally logs to console?)
+
+
 app = FastAPI(
-    debug=False,
-    title="MY_SERVICE",
-    description="MY_DESCRIPTION",
+    debug=True,
+    title="TEMP_MY_SERVICE",
+    description="TEMP_MY_DESCRIPTION",
     version="0.1.0",
 )
 
 
 app.include_router(health_check.router)
 
-@app.get("/")
-def root():
-    """Root endpiont"""
-    return {"message": "Service is up", "status": "OK"}
-
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
