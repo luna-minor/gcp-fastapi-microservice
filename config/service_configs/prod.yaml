@@ -1,0 +1,5 @@
+SERVICE_NAME: TEMP
+SERVICE_ENV: PROD
+SERVICE_ACCOUNT_EMAIL: demo-service@luna-minor.iam.gserviceaccount.com
+GCP_PROJECT: luna-minor
+GCP_REGION: us-west1

@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from api.routers import health_check
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 # TODO: test deployment concurrency settings work with given Procfile
@@ -19,11 +19,14 @@ logging.basicConfig(level=logging.DEBUG)
 
 # TODO: turn into cookiecutter template
 
-# TODO: write readme and note tools used and why
+# TODO: write readme and note tools used and why, note insipired by that config blog post, clean architecture, and 12 factor? with links?
+# --> try to keep reamde light for projects add more to the parent repo
 
 # TODO: makedocs and makedocs-strs?
 
 # TODO: mono-repo support (check git root / if in git repo)
+
+# TODO: update project from template scripts (in CLI)
 
 app = FastAPI(
     debug=True,
