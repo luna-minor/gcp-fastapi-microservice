@@ -1,6 +1,7 @@
 """ Main Service Configuration Definition, ie service-wide constants and configurations - values to be specied via .env file and loaded in at runtime"""
 
 import os
+from enum import Enum
 
 from pydantic import Field, constr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -8,15 +9,28 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 CONFIG_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+class LogLevel(str, Enum):
+    """Log level options"""
+
+    CRITICAL = "CRITICAL"
+    ERROR = "ERROR"
+    WARNING = "WARNING"
+    INFO = "INFO"
+    DEBUG = "DEBUG"
+
+
 class ServiceConfigModel(BaseSettings):
     """Main Service Configuration Definition, ie service-wide constants and configurations - values to be specied via .env file and loaded in at runtime"""
 
-    model_config = SettingsConfigDict(str_strip_whitespace=True, extra="ignore", _env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        str_strip_whitespace=True, extra="ignore", _env_file_encoding="utf-8", use_enum_values=True
+    )
 
     # Service
     SERVICE_NAME: str = Field(description="Service Name.")
     SERVICE_ENV: constr(to_lower=True) = Field(description="Service environment (ex. `prod`, `dev`, `test`, etc.).")
     HEALTH_CHECK_ROUTE: str = Field(description="API Route to use as health check.", default="/healthcheck")
+    LOG_LEVEL: LogLevel = Field(default=LogLevel.INFO)
 
     # Deployment defaults
     DEFAULT_GCP_PROJECT: str = Field(description="Default GCP Project, used when deploying, etc.")
@@ -32,16 +46,16 @@ try:
 
     # If specified value is not a file found in root directory, look for it in the ./config/service_configs dir
     if not os.path.isfile(SERVICE_CONFIG_FILE):
-        SERVICE_CONFIG_FILE = os.path.join(CONFIG_ROOT_DIR, "config", "service_configs", SERVICE_CONFIG_FILE)
+        SERVICE_CONFIG_FILE = os.path.join(".", "config", "service_configs", SERVICE_CONFIG_FILE)
 
     # Raise if file not found
     assert os.path.isfile(SERVICE_CONFIG_FILE)
-except KeyError as exc:
+except KeyError:
     raise FileNotFoundError(
         "Missing envrionment variable specifying service config file to use, export `SERVICE_CONFIG_FILE=my.env`."
-    ) from exc
-except AssertionError as exc:
-    raise FileExistsError(f"Serivce Config file was not found at {SERVICE_CONFIG_FILE}") from exc
+    )
+except AssertionError:
+    raise FileNotFoundError(f"Serivce Config file was not found at {SERVICE_CONFIG_FILE}")
 
 
 # Create service config model instance so it can be imported and referenced from the service app logic

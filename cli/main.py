@@ -122,8 +122,8 @@ def deploy(
 
     # Build deployment flags
     deployment_flags = [
-        f"--service_config={service_config}",
-        f"--traffic_percent={traffic_percent}",
+        f"--service-config={service_config}",
+        f"--traffic-percent={traffic_percent}",
     ]
     if version:
         deployment_flags.append(f"--version=${version}")
@@ -133,7 +133,7 @@ def deploy(
 
     if deploy_resp.returncode != 0:
         rprint("[bold red]Deployment Error![/bold red]")
-        typer.Abort()
+        raise typer.Abort()
 
     return
 

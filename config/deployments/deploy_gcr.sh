@@ -16,7 +16,7 @@ NO_TRAFFIC_FLAG="--no-traffic"
 for arg in "$@"
 do
   case $arg in
-    --service_config=*)
+    --service-config=*)
     SERVICE_CONFIG="${arg#*=}"
     shift
     ;;
@@ -24,7 +24,7 @@ do
     VERSION="${arg#*=}"
     shift
     ;;
-    --traffic_percent=*)
+    --traffic-percent=*)
     TRAFFIC_PERCENT="${arg#*=}"
     shift
     ;;
