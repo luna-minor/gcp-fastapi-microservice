@@ -9,6 +9,9 @@ from api.routers import health_check
 from config.gcp_env import GCP_ENV_DATA
 from config.service_config import SERVICE_CONFIG
 
+
+# TODO: flow should be as soon as possible setup basic logging with default format, if rich is installed setup rich handler, if in deployed env setup gcp log format/handler (with json payload to get level correct, add trace ID, ex.)
+
 # Setup logging, accoutning for local and deployed environments
 if GCP_ENV_DATA.IS_DEPLOYED:
     import google.cloud.logging
