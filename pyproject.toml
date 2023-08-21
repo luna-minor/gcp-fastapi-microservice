@@ -42,6 +42,8 @@ omit = [
     "/builder/*",
     "tests/*",
     "venv/*",
+    "cli/*",
+    "service_config/*",
 ]
 
 [tool.coverage.report]

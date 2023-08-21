@@ -6,7 +6,6 @@ import sys
 from typing import Optional
 
 import typer
-import yaml
 from rich import print as rprint
 from typing_extensions import Annotated
 
@@ -16,6 +15,10 @@ app = typer.Typer(
 )
 
 CLI_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Fetch list of deployment scripts and service configs for CLI help
+DEPLOYMENT_SCRIPTS = os.listdir(os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments"))
+SERVICE_CONFIGS = os.listdir(os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "service_configs"))
 
 
 @app.command()
@@ -61,10 +64,14 @@ def lint():
 
 
 @app.command()
-def start_dev_server(service_config_file: Annotated[str, typer.Argument(envvar="SERVICE_ENV_FILE")] = "local.yaml"):
+def start_dev_server(
+    service_config_file: Annotated[
+        str, typer.Argument(envvar="SERVICE_CONFIG_FILE")
+    ] = "config/service_configs/local.env"
+):
     """Start serivce on localhost."""
 
-    os.environ["SERVICE_ENV_FILE"] = service_config_file
+    os.environ["SERVICE_CONFIG_FILE"] = service_config_file
 
     rprint(f"Starting service on local server using config file: {service_config_file}")
 
@@ -75,11 +82,14 @@ def start_dev_server(service_config_file: Annotated[str, typer.Argument(envvar="
 
 @app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
 def test(
-    ctx: typer.Context, service_config_file: Annotated[str, typer.Argument(envvar="SERVICE_ENV_FILE")] = "local.yaml"
+    ctx: typer.Context,
+    service_config_file: Annotated[
+        str, typer.Argument(envvar="SERVICE_CONFIG_FILE")
+    ] = "config/service_configs/local.env",
 ):
     """Run tests. NOTE: can specify extra command line flags and they will be passed to pytest."""
 
-    os.environ["SERVICE_ENV_FILE"] = service_config_file
+    os.environ["SERVICE_CONFIG_FILE"] = service_config_file
 
     rprint(f"Running tests using config file: {service_config_file}; with flags={ctx.args}")
 
@@ -91,40 +101,39 @@ def test(
 
 
 @app.command()
-def deploy(deploy: str, service_config: str, version: Optional[str] = None, traffic_percent: int = 0):
+def deploy(
+    deploy: Annotated[str, typer.Argument(help=f"Options: {DEPLOYMENT_SCRIPTS}")],
+    service_config: Annotated[str, typer.Argument(help=f"Options: {SERVICE_CONFIGS}")],
+    version: Optional[str] = None,
+    traffic_percent: int = 0,
+):
     """Deploy service via a specified deployment script."""
+    deployment_script = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments", deploy)
 
-    deploy_script_path = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments", deploy)
-    service_config_path = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "service_configs", service_config)
+    # If service config is listed in the options, build full path, else use file specified
+    if service_config in SERVICE_CONFIGS:
+        service_config = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "service_configs", service_config)
 
-    # Load in service config and pass deployment flags
-    with open(file=service_config_path, mode="r", encoding="utf-8") as service_config_file:
-        service_config_data = yaml.safe_load(service_config_file)
+    if not os.path.isfile(service_config):
+        raise FileNotFoundError("Service config not found at {}".format(service_config))
 
     # Ensure deployment script is executable
-    subprocess.run(args=["chmod", "+x", deploy_script_path], check=False)
+    subprocess.run(args=["chmod", "+x", deployment_script], check=False)
 
-    try:
-        deployment_flags = [
-            f"--gcp_project={service_config_data['GCP_PROJECT']}",
-            f"--gcp_region={service_config_data['GCP_REGION']}",
-            f"--service_name={service_config_data['SERVICE_NAME']}",
-            f"--service_account={service_config_data['SERVICE_ACCOUNT_EMAIL']}",
-            f"--service_env={service_config_data['SERVICE_ENV']}",
-            f"--traffic_percent={traffic_percent}",
-        ]
-    except KeyError as exc:
-        rprint(
-            f"[bold red]Error! Missing required deployment flags from specified service config file {service_config}: {exc}[/bold red]"
-        )
-        raise typer.Abort()
-
-    # Add optional values
+    # Build deployment flags
+    deployment_flags = [
+        f"--service_config={service_config}",
+        f"--traffic_percent={traffic_percent}",
+    ]
     if version:
         deployment_flags.append(f"--version=${version}")
 
     # Run deployment script
-    subprocess.run(args=[deploy_script_path] + deployment_flags, check=False)
+    deploy_resp = subprocess.run(args=[deployment_script] + deployment_flags, check=False)
+
+    if deploy_resp.returncode != 0:
+        rprint("[bold red]Deployment Error![/bold red]")
+        typer.Abort()
 
     return
 

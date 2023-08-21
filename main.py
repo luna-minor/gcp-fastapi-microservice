@@ -1,12 +1,21 @@
 """ Main module and entrypoint for the service."""
 import logging
+import os
 
 import uvicorn
 from fastapi import FastAPI
 
 from api.routers import health_check
+from config.gcp_env import GCP_ENV_DATA
+from config.service_config import SERVICE_CONFIG
 
 logging.basicConfig(level=logging.INFO)
+
+if GCP_ENV_DATA.IS_DEPLOYED:
+    import google.cloud.logging
+
+    gcp_log_client = google.cloud.logging.Client()
+    gcp_log_client.setup_logging()
 
 
 # TODO: test deployment concurrency settings work with given Procfile
@@ -28,6 +37,10 @@ logging.basicConfig(level=logging.INFO)
 
 # TODO: update project from template scripts (in CLI)
 
+# TODO: still need to first install typer to run CLI, which has the seutp command... cookiecuter post gen script? or pip dependancy?
+
+# TODO: gitleaks? Requires docker or go...
+
 app = FastAPI(
     debug=True,
     title="TEMP_MY_SERVICE",
@@ -40,4 +53,9 @@ app.include_router(health_check.router)
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    # This is used when running locally.
+    # Uvicorn is used to run the application when deployed. See entrypoint in Dockerfile or Procfile.
+
+    PORT = int(os.getenv("PORT")) if os.getenv("PORT") else 8080
+
+    uvicorn.run("main:app", host="0.0.0.0", port=PORT, reload=True)
