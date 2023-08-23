@@ -24,7 +24,7 @@ class DeployedEnvData(BaseModel):
     SERVICE_ACCOUNT_EMAIL: str = Field(description="Serivce Accountfrom env", default=DEAULT_STR_VALUE)
 
 
-@lru_cache(maxsize=2)
+@lru_cache()
 def load_deployed_env_data() -> DeployedEnvData:
     """Load deployed GCP envrionment data, from env vars and fetched from metadata server."""
 
@@ -70,5 +70,7 @@ def load_deployed_env_data() -> DeployedEnvData:
     )
 
 
-# Load in GCP env data, if deployed
+# Load in GCP env data if deployed and export values as env variables
 GCP_ENV_DATA = load_deployed_env_data()
+
+os.environ.update({k: str(v) for k, v in GCP_ENV_DATA.model_dump(exclude_none=True).items()})
