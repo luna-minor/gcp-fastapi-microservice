@@ -3,9 +3,9 @@ from fastapi import APIRouter
 
 from config.service_config import SERVICE_CONFIG
 
-from .core import LoggingRoute
+from api.routers.core import BaseAPIRoute
 
-router = APIRouter(tags=["healthcheck"], route_class=LoggingRoute)
+router = APIRouter(tags=["healthcheck"], route_class=BaseAPIRoute)
 
 
 @router.get(SERVICE_CONFIG.HEALTH_CHECK_ROUTE)

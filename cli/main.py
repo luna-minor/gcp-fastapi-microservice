@@ -102,17 +102,17 @@ def test(
 
 @app.command()
 def deploy(
-    deploy: Annotated[str, typer.Argument(help=f"Options: {DEPLOYMENT_SCRIPTS}")],
+    deploy_script: Annotated[str, typer.Argument(help=f"Options: {DEPLOYMENT_SCRIPTS}")],
     service_config: Annotated[str, typer.Argument(help=f"Options: {SERVICE_CONFIGS}")],
     version: Optional[str] = None,
     traffic_percent: int = 0,
 ):
     """Deploy service via a specified deployment script."""
-    deployment_script = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments", deploy)
+    deployment_script = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments", deploy_script)
 
-    # If service config is listed in the options, build full path, else use file specified
+    # If service config is listed in the options, build full relative path, else use the file path specified
     if service_config in SERVICE_CONFIGS:
-        service_config = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "service_configs", service_config)
+        service_config = os.path.join(".", "config", "service_configs", service_config)
 
     if not os.path.isfile(service_config):
         raise FileNotFoundError("Service config not found at {}".format(service_config))

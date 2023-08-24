@@ -1,19 +1,20 @@
 """Core APIRoute clases, can inherit from these modified APIRoutes for specific added functionality"""
-
 import logging
+import os
 from typing import Callable
 
 from fastapi import Request, Response
 from fastapi.routing import APIRoute
 
 
-class LoggingRoute(APIRoute):
+class BaseAPIRoute(APIRoute):
     """Log inbound HTTP Request data"""
 
     def get_route_handler(self) -> Callable:
         original_route_handler = super().get_route_handler()
 
         async def custom_route_handler(request: Request) -> Response:
+            # FastAPI has no global request context, using env vars to store
             req_body = await request.body()
 
             logging.info(
