@@ -1,6 +1,5 @@
 """Core APIRoute clases, can inherit from these modified APIRoutes for specific added functionality"""
 import logging
-import os
 from typing import Callable
 
 from fastapi import Request, Response
@@ -18,9 +17,7 @@ class BaseAPIRoute(APIRoute):
             req_body = await request.body()
 
             logging.info(
-                "{} Request; URL={}; headers={}; body={}".format(
-                    request.method, request.base_url, request.headers, req_body
-                )
+                f"{request.method} Request; URL={request.base_url}; headers={request.headers}; body={req_body}"
             )
 
             response = await original_route_handler(request)

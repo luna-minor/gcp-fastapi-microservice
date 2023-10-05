@@ -1,0 +1,32 @@
+{
+    "__version": "0.0.1",
+    "project_name": "Hello World!",
+    "project_slug": "{{ cookiecutter.project_name | slugify }}",
+    "project_description": "",
+    "default_gcp_project": "placeholder_project",
+    "default_service_account": "placeholder_service_account",
+    "default_gcp_region": [
+        "us-west2",
+        "us-central1",
+        "us-east1",
+        "us-east4",
+        "us-west3",
+        "us-west4",
+        "asia-east1",
+        "asia-east2",
+        "asia-northeast1",
+        "asia-northeast2",
+        "asia-northeast3",
+        "asia-south1",
+        "asia-southeast1",
+        "asia-southeast2",
+        "australia-southeast1",
+        "europe-central2",
+        "europe-west1",
+        "europe-west2",
+        "europe-west3",
+        "europe-west6",
+        "northamerica-northeast1",
+        "southamerica-east1"
+      ]
+}

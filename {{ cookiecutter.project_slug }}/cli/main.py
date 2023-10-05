@@ -57,8 +57,7 @@ def setup():
 
 @app.command()
 def lint():
-    """Run linting and pre-commit commands"""
-    # Run lininting checks and formatting via pre-commit
+    """Run linting/formatting and pre-commit commands via pre-commit. Configurations can be changed via .pre-commit-config.yaml and pyproject.toml files."""
     subprocess.run(args=[sys.executable, "-m", "pre_commit", "run", "--all-files", "-v"], check=False)
     return
 
@@ -87,7 +86,7 @@ def test(
         str, typer.Argument(envvar="SERVICE_CONFIG_FILE")
     ] = "config/service_configs/local.env",
 ):
-    """Run tests. NOTE: can specify extra command line flags and they will be passed to pytest."""
+    """Run tests. NOTE: can specify extra command line flags and they will be passed to pytest. Configuration can also be changed via pyproject.toml."""
 
     os.environ["SERVICE_CONFIG_FILE"] = service_config_file
 
@@ -115,7 +114,7 @@ def deploy(
         service_config = os.path.join(".", "config", "service_configs", service_config)
 
     if not os.path.isfile(service_config):
-        raise FileNotFoundError("Service config not found at {}".format(service_config))
+        raise FileNotFoundError(f"Service config not found at {service_config}")
 
     # Ensure deployment script is executable
     subprocess.run(args=["chmod", "+x", deployment_script], check=False)

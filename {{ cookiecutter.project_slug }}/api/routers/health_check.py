@@ -1,9 +1,8 @@
 """Health check endpoint."""
 from fastapi import APIRouter
 
-from config.service_config import SERVICE_CONFIG
-
 from api.routers.core import BaseAPIRoute
+from config.service_config import SERVICE_CONFIG
 
 router = APIRouter(tags=["healthcheck"], route_class=BaseAPIRoute)
 

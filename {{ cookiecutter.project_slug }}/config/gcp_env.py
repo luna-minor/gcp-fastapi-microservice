@@ -2,10 +2,9 @@
 
 import os
 from functools import lru_cache
-from typing import Annotated
 
 import requests
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 DEAULT_STR_VALUE = "not-set"
 
