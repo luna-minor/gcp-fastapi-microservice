@@ -84,7 +84,7 @@ The [config](config) directory includes service config values and constants, as 
 
 ## Opinions
 - Why aren't the .env files gitignored? - this service takes the opinion that .env files are useful for configuration of a service and enables easily chanigng those values for different enviornments - all useful things to have comitted into source control. Any secrets needed should be managed via a secret manager and fetched at runtime, rather than set in a static configuration file. So instead of specifying an API key or SQL connection secret in the .env file - instead the .env should specify the URI or ID or path where a secret can be securely fetched. 
-
+- Pytest for testing, although you can still write unittest style tests since the pytest runner works for both.
 
 ## References
 
