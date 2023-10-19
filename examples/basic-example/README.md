@@ -46,6 +46,7 @@ The [config](config) directory includes service config values and constants, as 
     - `python cli/main.py test --help`
 - Run tests (added flags will be passed to pytest):
     - `python cli/main.py test`
+    - Example passing extra pytest flags: `python cli/main.py tests -o log_cli=true log_cli_level=DEBUG`
 
 
 ## Lint
@@ -72,3 +73,4 @@ The [config](config) directory includes service config values and constants, as 
     - `python cli/main.py deploy DEPLOY_SCRIPT`
     - `--traffic-percent`: optional flag to specify percentage of traffic new version should accept (defaults to 0%)
     - `--version`: optional flag to specify a verion name
+    - Ex. `python cli/main.py deploy deploy_gcr.sh --traffic-percent=50`
