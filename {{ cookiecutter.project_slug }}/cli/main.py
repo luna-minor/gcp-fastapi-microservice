@@ -95,11 +95,11 @@ def test(
 
     extra_flags = ctx.args
 
-    resp = pytest.main(args = extra_flags)
+    resp = subprocess.run(args=[sys.executable, "-m", "pytest"] + extra_flags, check=False, stderr=subprocess.PIPE)
 
-    if resp != pytest.ExitCode.OK:
+    if resp.returncode != 0:
         rprint("[bold red]Tests failed.[/bold red]")
-        raise typer.Exit(code=resp.value)
+        raise typer.Exit(code=2)
 
     return
 

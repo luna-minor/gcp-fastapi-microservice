@@ -114,9 +114,8 @@ def test_project_gen(template_values: dict, temp_output_dir):
     tests_resp = run_script(root_dir=generated_project_dir, command="python", script_path="cli/main.py", args="test")
 
     if tests_resp.returncode != 0:
-        logging.error(tests_resp.stderr)
         raise Exception(
-            f"Failed to pass tests in generated project with values={template_values};\nstderr:{tests_resp.stderr}"
+            f"Failed to pass tests in generated project with values={template_values}n\stdout:{tests_resp.stdout.decode('utf-8')}"
         )
 
     return
