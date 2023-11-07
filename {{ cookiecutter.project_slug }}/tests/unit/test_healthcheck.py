@@ -16,4 +16,3 @@ def test_healthcheck_endpoint(test_client):
     response = test_client.get(SERVICE_CONFIG.HEALTH_CHECK_ROUTE)
     assert response.status_code == 200
     assert response.json() == {"message": "Service is up", "status": "OK"}
-    assert response.status_code != 200, "Intentional failure!"
