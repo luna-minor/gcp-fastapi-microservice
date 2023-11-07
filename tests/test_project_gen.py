@@ -115,7 +115,7 @@ def test_project_gen(template_values: dict, temp_output_dir):
 
     if tests_resp.returncode != 0:
         raise Exception(
-            f"Failed to pass tests in generated project with values={template_values}n\stdout:{tests_resp.stdout.decode('utf-8')}"
+            f"Failed to pass tests in generated project with values={template_values}\nstdout:{tests_resp.stdout.decode('utf-8')}"
         )
 
     return
