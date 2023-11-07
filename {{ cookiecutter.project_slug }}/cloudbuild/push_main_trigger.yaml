@@ -1,0 +1,17 @@
+# Create GitHub Build Trigger
+# https://cloud.google.com/sdk/gcloud/reference/beta/builds/triggers/create/github
+# https://cloud.google.com/config-connector/docs/reference/resource-docs/cloudbuild/cloudbuildtrigger
+
+description: {{ cookiecutter.project_name }} Push to Main Build Trigger
+filename: "GIT_REPO_ROOT_PLACEHOLDER/cloudbuild/cloudbuild.yaml"
+github:
+  name: GIT_REPO_ROOT_PLACEHOLDER
+  owner: GIT_REPO_OWNER_PLACEHOLDER
+  push:
+    branch: ^master|main$
+ignoredFiles:
+- '**/*.md'
+includedFiles:
+- "GIT_REPO_ROOT_PLACEHOLDER"
+name: {{ cookiecutter.project_slug }}-push-to-main
+includeBuildLogs: "INCLUDE_BUILD_LOGS_WITH_STATUS"

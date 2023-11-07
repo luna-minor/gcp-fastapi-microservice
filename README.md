@@ -10,6 +10,7 @@ A template [FastAPI](https://fastapi.tiangolo.com/) Microservice designed for de
 - Separation of configuration and application logic
 - Configurable linting and code formatting, enforced via pre-commit hooks
 - Helper CLI to setup, test, run, lint, and deploy service
+- Optional CI/CD with Cloud Build
 
 
 ## Prerequisites:

@@ -1,5 +1,6 @@
 default_context:
   project_name: Basic Example
   project_description: A basic example project.
+  cicd: None
   default_gcp_project: PLACEHOLDER_GCP_PROJECT
   default_gcp_region: us-west2
