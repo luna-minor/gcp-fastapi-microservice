@@ -217,4 +217,3 @@ terraform.rc
 
 # Added:
 secrets/
-.devcontainer/
