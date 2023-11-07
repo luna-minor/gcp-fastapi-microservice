@@ -1,6 +1,5 @@
 import logging
 import os
-import shutil
 import tempfile
 import subprocess
 from typing import Optional
@@ -72,7 +71,6 @@ def run_script(root_dir: str, command: str, script_path: str, args: Optional[lis
     if args:
         command_args.append(args)
 
-
     logging.info(f"Running {command_args}")
 
     try:
@@ -115,6 +113,9 @@ def test_project_gen(template_values: dict, temp_output_dir):
     # Run test scripts in sub-process, assert they pass
     tests_resp = run_script(root_dir=generated_project_dir, command="python", script_path="cli/main.py", args="test")
 
-    assert tests_resp.returncode == 0, f"Failed to pass tests in generated project with values={template_values}; got response: {tests_resp.stdout},{tests_resp.stderr}"
+    if tests_resp.returncode != 0:
+        raise Exception(
+            f"Failed to pass tests in generated project with values={template_values}n\stdout:{tests_resp.stdout.decode('utf-8')}"
+        )
 
     return

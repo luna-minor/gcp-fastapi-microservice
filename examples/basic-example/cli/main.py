@@ -87,6 +87,7 @@ def test(
     ] = "config/service_configs/local.env",
 ):
     """Run tests. NOTE: can specify extra command line flags and they will be passed to pytest. Configuration can also be changed via pyproject.toml."""
+    import pytest
 
     os.environ["SERVICE_CONFIG_FILE"] = service_config_file
 
@@ -94,11 +95,11 @@ def test(
 
     extra_flags = ctx.args
 
-    resp = subprocess.run(args=[sys.executable, "-m", "pytest"] + extra_flags, check=False)
+    resp = subprocess.run(args=[sys.executable, "-m", "pytest"] + extra_flags, check=False, stderr=subprocess.PIPE)
 
     if resp.returncode != 0:
         rprint("[bold red]Tests failed.[/bold red]")
-        raise typer.Exit(code=resp.returncode)
+        raise typer.Exit(code=2)
 
     return
 

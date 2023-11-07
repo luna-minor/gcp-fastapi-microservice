@@ -1,5 +1,6 @@
 """Unit test Health Check endpoint"""
-
+import sys
+import os
 import pytest
 from fastapi.testclient import TestClient
 
