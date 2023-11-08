@@ -28,18 +28,23 @@ def setup():
     """
 
     # Install dev dependancies
+    rprint("[blue]Installing dev dependancies[/blue]")
     pip_resp = subprocess.run(args=[sys.executable, "-m", "pip", "install", "-r", "requirements-dev.txt"], check=False)
 
     if pip_resp.returncode != 0:
+        rprint("[bold red]Failed to install dev dependancies![/bold red]")
         raise typer.Abort()
 
     # Install pre-commit
+    rprint("[blue]Installing pre-commit[/blue]")
     pre_commit_install_resp = subprocess.run(args=[sys.executable, "-m", "pre_commit", "install"], check=False)
 
     if pre_commit_install_resp.returncode != 0:
+        rprint("[bold red]Failed to install pre-commit![/bold red]")
         raise typer.Abort()
 
     # Run pre-commit
+    rprint("[blue]Running pre-commit[/blue]")
     pre_commit_run_resp = subprocess.run(
         args=[sys.executable, "-m", "pre_commit", "run", "--all-files", "-v"], check=False
     )
@@ -50,7 +55,7 @@ def setup():
         )
 
     rprint("=" * 100)
-    rprint("[green]Finished project setup! :tada:")
+    rprint("[green]Finished project setup![/green] :tada:")
     rprint("=" * 100)
     return
 
