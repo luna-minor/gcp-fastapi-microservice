@@ -70,7 +70,7 @@ def setup():
 
     if pip_resp.returncode != 0:
         raise typer.Abort()
-
+    
     # Init git repo
     git_root = init_git_repo()
     rprint("Initalized git")

@@ -7,7 +7,6 @@ from urllib import parse
 
 import typer
 import yaml
-from config.service_config import SERVICE_CONFIG
 from rich import print as rprint
 from typing_extensions import Annotated
 
@@ -17,56 +16,58 @@ app = typer.Typer(
 )
 
 CLOUD_BUILD_CLI_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_GCP_PROJECT = SERVICE_CONFIG.DEFAULT_GCP_PROJECT
 
 
-@app.command()
-def manual_build(
-    project_id: Annotated[
-        str, typer.Argument(help="GCP Project ID to create Build job in.")
-    ] = DEFAULT_GCP_PROJECT
-):
-    """Manually trigger a remote build in Cloud Build."""
-    # Build Subsitution varibales
-    short_sha = "manual-build"
-    branch_name_resp = subprocess.run(args=["git", "branch", "--show-current"])
-    if branch_name_resp.returncode != 0:
-        rprint("[bold red][/bold red]")
-    branch_name = branch_name_resp.stdout.decode("utf-8").strip()
+def get_build_gcp_project() -> str:
+    """GCP Project ID to create Build job in.
+    Loading in from prod.env serivce configuration and prompting for confirmation or udpate.
+    """
+    # Load in Service Config from .env file, based on relative file path specified in an env variable.
+    prod_config_env_file = "prod.env"
 
-    # Use gcloud CLI to submit build
-    # https://cloud.google.com/sdk/gcloud/reference/builds/submit
-    build_cmd = ["gcloud", "builds", "submit", "."]
-    build_flags = [
-        "--config=./cloudbuild/cloudbuild.yaml",
-        f"--project=${project_id}",
-        f"--substitutions BRANCH_NAME={branch_name},SHORT_SHA={short_sha}",
-    ]
-    build_resp = subprocess.run(
-        args=build_cmd + build_flags,
-        check=False,
+    # If specified value is not a file found in root directory, look for it in the ./config/service_configs dir
+    if not os.path.isfile(prod_config_env_file):
+        prod_config_env_file = os.path.join(
+            ".", "config", "service_configs", prod_config_env_file
+        )
+
+    project_id = None
+    project_confirm = None
+
+    if os.path.isfile(prod_config_env_file):
+        from config.service_config import SERVICE_CONFIG
+
+        project_id = SERVICE_CONFIG.DEFAULT_GCP_PROJECT
+
+    if not project_id:
+        project_id = typer.prompt(
+            "[blue]Enter a GCP Project to create Build Triggers in:[/blue]"
+        )
+
+    project_confirm = typer.confirm(
+        f"[blue]Verify this is the correct GCP Project to create Build Triggers in: [yellow bold]{project_id}[/yellow bold]?[/blue]"
     )
 
-    if build_resp.returncode != 0:
-        rprint("[bold red]Remote Build running in Cloud Build failed![/bold red]")
-        typer.Abort()
+    if not project_confirm:
+        project_id = typer.prompt(
+            "[blue]Enter a GCP Project to create Build Triggers in:[/blue]"
+        )
 
-    rprint("=" * 100)
-    rprint("[green]Finished remote build! :tada:")
-    rprint("=" * 100)
-    return
+    assert (
+        project_id
+    ), "A project ID to create the Cloud Build Triggers and run the builds in must be specified."
+
+    return project_id
 
 
 @app.command()
-def setup(
-    project_id: Annotated[
-        str, typer.Argument(help="GCP Project ID to create Build job in.")
-    ] = DEFAULT_GCP_PROJECT
-):
+def setup():
     """Create the Cloud Build Triggers to connect GitHub Repository events with Cloud Build.
     NOTE: Requires a one-time manual linking between Cloud Build and GitHub, will be prompted via the gcloud CLI if this is needed.
     NOTE: Will create/update any build triggers defined in the cloudbuild directory ending in "_trigger.yaml"
     """
+    project_id = get_build_gcp_project()
+
     # Fetch Git Repo Owner from orgin ULRL
     git_remote_origin_resp = subprocess.run(
         args=["git", "config", "--get remote.origin.url"]
@@ -138,10 +139,42 @@ def setup(
 
 
 @app.command()
+def manual_build():
+    """Manually trigger a remote build in Cloud Build."""
+    project_id = get_build_gcp_project()
+
+    # Build Subsitution varibales
+    short_sha = "manual-build"
+    branch_name_resp = subprocess.run(args=["git", "branch", "--show-current"])
+    if branch_name_resp.returncode != 0:
+        rprint("[bold red][/bold red]")
+    branch_name = branch_name_resp.stdout.decode("utf-8").strip()
+
+    # Use gcloud CLI to submit build
+    # https://cloud.google.com/sdk/gcloud/reference/builds/submit
+    build_cmd = ["gcloud", "builds", "submit", "."]
+    build_flags = [
+        "--config=./cloudbuild/cloudbuild.yaml",
+        f"--project=${project_id}",
+        f"--substitutions BRANCH_NAME={branch_name},SHORT_SHA={short_sha}",
+    ]
+    build_resp = subprocess.run(
+        args=build_cmd + build_flags,
+        check=False,
+    )
+
+    if build_resp.returncode != 0:
+        rprint("[bold red]Remote Build running in Cloud Build failed![/bold red]")
+        typer.Abort()
+
+    rprint("=" * 100)
+    rprint("[green]Finished remote build! :tada:")
+    rprint("=" * 100)
+    return
+
+
+@app.command()
 def update_build_trigger(
-    project_id: Annotated[
-        str, typer.Argument(help="GCP Project ID to create Build job in.")
-    ] = DEFAULT_GCP_PROJECT,
     build_trigger: Annotated[
         str,
         typer.Argument(
@@ -152,6 +185,7 @@ def update_build_trigger(
     """Update one or all Build Trigger configs
     NOTE: Will create/update any build triggers defined in the cloudbuild directory ending in "_trigger.yaml"
     """
+    project_id = get_build_gcp_project()
 
     # Run setup command to create/update all Build Triggers
     if build_trigger == "all":
@@ -187,9 +221,6 @@ def update_build_trigger(
 
 @app.command()
 def delete_build_triggers(
-    project_id: Annotated[
-        str, typer.Argument(help="GCP Project ID to create Build job in.")
-    ] = DEFAULT_GCP_PROJECT,
     build_trigger: Annotated[
         str,
         typer.Argument(
@@ -200,6 +231,7 @@ def delete_build_triggers(
     """Update one or all Build Trigger configs
     NOTE: Will DELETE any build triggers defined in the cloudbuild directory ending in "_trigger.yaml"
     """
+    project_id = get_build_gcp_project()
 
     triggers_to_delete = []
     if build_trigger == "all":

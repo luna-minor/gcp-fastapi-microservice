@@ -31,11 +31,7 @@ SERVICE_CONFIGS = os.listdir(
 
 from cloudbuild import cloudbuild_cli
 
-app.add_typer(
-    cloudbuild_cli.app,
-    name="cloudbuild",
-    help="Sub-command CLI to setup CI/CD with Cloud Build, use command with `--help` flag to show more info.",
-)
+app.add_typer(cloudbuild_cli.app, name="cloudbuild", help="Sub-command CLI to setup CI/CD with Cloud Build, use command with `--help` flag to show more info.")
 
 
 def init_git_repo() -> str:
@@ -78,7 +74,7 @@ def setup():
 
     if pip_resp.returncode != 0:
         raise typer.Abort()
-
+    
     # Init git repo
     git_root = init_git_repo()
     rprint("Initalized git")
