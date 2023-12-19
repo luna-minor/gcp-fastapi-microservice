@@ -9,16 +9,55 @@ import typer
 from rich import print as rprint
 from typing_extensions import Annotated
 
+sys.path.append(".")
+
+
 app = typer.Typer(
-    name="TEMP_CLI",
+    name="{{ cookiecutter.project_slug }}",
     no_args_is_help=True,
 )
 
 CLI_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Fetch list of deployment scripts and service configs for CLI help
-DEPLOYMENT_SCRIPTS = os.listdir(os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments"))
-SERVICE_CONFIGS = os.listdir(os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "service_configs"))
+DEPLOYMENT_SCRIPTS = os.listdir(
+    os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments")
+)
+SERVICE_CONFIGS = os.listdir(
+    os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "service_configs")
+)
+
+# Add/register other Typer CLI modules in project by importing and using .add_typer() method
+{% if cookiecutter.cicd == 'cloudbuild' %}
+from cloudbuild import cloudbuild_cli
+
+app.add_typer(cloudbuild_cli.app, name="cloudbuild", help="Sub-command CLI to setup CI/CD with Cloud Build, use command with `--help` flag to show more info.")
+{% endif %}
+
+def init_git_repo() -> str:
+    """
+    Initialize project repo as a git repo (if not already in a git repo)
+    :return: Path of git repo root directory
+    """
+
+    is_git_repo_resp = subprocess.run(
+        args=["git", "rev-parse", "--is-inside-work-tree"]
+    )
+
+    # git rev-parse failed, dir is not a git repo, run git init
+    if is_git_repo_resp.returncode != 0:
+        git_init_output = subprocess.run(args=["git", "init"])
+        assert (
+            git_init_output.returncode == 0
+        ), f"Failed to run git init - stdout: {git_init_output.stdout}; stderr: {git_init_output.stderr}"
+
+    # Return root of git repo
+    git_root_resp = subprocess.run(
+        args=["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE
+    )
+    git_root_dir = git_root_resp.stdout.decode("utf-8").strip()
+
+    return git_root_dir
 
 
 @app.command()
@@ -28,20 +67,30 @@ def setup():
     """
 
     # Install dev dependancies
-    pip_resp = subprocess.run(args=[sys.executable, "-m", "pip", "install", "-r", "requirements-dev.txt"], check=False)
+    pip_resp = subprocess.run(
+        args=[sys.executable, "-m", "pip", "install", "-r", "requirements-dev.txt"],
+        check=False,
+    )
 
     if pip_resp.returncode != 0:
         raise typer.Abort()
+    
+    # Init git repo
+    git_root = init_git_repo()
+    rprint("Initalized git")
 
     # Install pre-commit
-    pre_commit_install_resp = subprocess.run(args=[sys.executable, "-m", "pre_commit", "install"], check=False)
+    pre_commit_install_resp = subprocess.run(
+        args=[sys.executable, "-m", "pre_commit", "install"], check=False
+    )
 
     if pre_commit_install_resp.returncode != 0:
         raise typer.Abort()
 
     # Run pre-commit
     pre_commit_run_resp = subprocess.run(
-        args=[sys.executable, "-m", "pre_commit", "run", "--all-files", "-v"], check=False
+        args=[sys.executable, "-m", "pre_commit", "run", "--all-files", "-v"],
+        check=False,
     )
 
     if pre_commit_run_resp.returncode != 0:
@@ -58,7 +107,10 @@ def setup():
 @app.command()
 def lint():
     """Run linting/formatting and pre-commit commands via pre-commit. Configurations can be changed via .pre-commit-config.yaml and pyproject.toml files."""
-    subprocess.run(args=[sys.executable, "-m", "pre_commit", "run", "--all-files", "-v"], check=False)
+    subprocess.run(
+        args=[sys.executable, "-m", "pre_commit", "run", "--all-files", "-v"],
+        check=False,
+    )
     return
 
 
@@ -79,7 +131,9 @@ def start_dev_server(
     return
 
 
-@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+@app.command(
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+)
 def test(
     ctx: typer.Context,
     service_config_file: Annotated[
@@ -88,13 +142,21 @@ def test(
 ):
     """Run tests. NOTE: can specify extra command line flags and they will be passed to pytest. Configuration can also be changed via pyproject.toml."""
 
+    # Ensure additional flags aren't mixed with a specified service config file, moving any non .env file values to args and setting default
+    if not service_config_file.endswith(".env"):
+        ctx.args.append(service_config_file)
+        service_config_file = "config/service_configs/local.env"
     os.environ["SERVICE_CONFIG_FILE"] = service_config_file
 
-    rprint(f"Running tests using config file: {service_config_file}; with flags={ctx.args}")
+    rprint(
+        f"Running tests using config file: {service_config_file}; with flags={ctx.args}"
+    )
 
     extra_flags = ctx.args
 
-    resp = subprocess.run(args=[sys.executable, "-m", "pytest"] + extra_flags, check=False)
+    resp = subprocess.run(
+        args=[sys.executable, "-m", "pytest"] + extra_flags, check=False
+    )
 
     if resp.returncode != 0:
         rprint("[bold red]Tests failed.[/bold red]")
@@ -105,13 +167,17 @@ def test(
 
 @app.command()
 def deploy(
-    deploy_script: Annotated[str, typer.Argument(help=f"Options: {DEPLOYMENT_SCRIPTS}")],
+    deploy_script: Annotated[
+        str, typer.Argument(help=f"Options: {DEPLOYMENT_SCRIPTS}")
+    ],
     service_config: Annotated[str, typer.Argument(help=f"Options: {SERVICE_CONFIGS}")],
     version: Optional[str] = None,
     traffic_percent: int = 0,
 ):
     """Deploy service via a specified deployment script."""
-    deployment_script = os.path.join(os.path.dirname(CLI_ROOT_DIR), "config", "deployments", deploy_script)
+    deployment_script = os.path.join(
+        os.path.dirname(CLI_ROOT_DIR), "config", "deployments", deploy_script
+    )
 
     # If service config is listed in the options, build full relative path, else use the file path specified
     if service_config in SERVICE_CONFIGS:
@@ -132,7 +198,9 @@ def deploy(
         deployment_flags.append(f"--version=${version}")
 
     # Run deployment script
-    deploy_resp = subprocess.run(args=[deployment_script] + deployment_flags, check=False)
+    deploy_resp = subprocess.run(
+        args=[deployment_script] + deployment_flags, check=False
+    )
 
     if deploy_resp.returncode != 0:
         rprint("[bold red]Deployment Error![/bold red]")

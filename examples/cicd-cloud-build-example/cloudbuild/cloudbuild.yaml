@@ -1,0 +1,135 @@
+# Basic Cloud Build file with steps to setup, lint, test, and deploy
+
+# Cloud Build Config Structure Overview
+# https://cloud.google.com/cloud-build/docs/build-config
+
+# Useful post on bash/script syntax in cloudbuild
+# https://medium.com/@davidstanke/mastering-google-cloud-build-config-syntax-8c3024607daf
+
+
+#################################################
+# Root flags
+#################################################
+
+# https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values#yaml_3
+options:
+    substitution_option: 'ALLOW_LOOSE'
+
+timeout: 1800s
+
+steps:
+
+#################################################
+# Setup
+#################################################
+- id: INSTALL-PYTHON
+  name: 'python:3.10'
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: python3
+  args:
+    [
+      "-m",
+      "pip",
+      "install",
+      "-r",
+      "requirements-dev.txt", # Dependencies for the service
+      "--user",  # So dependencies get loaded in right place, and persist across Steps
+      "--no-warn-script-location". # Pip in Cloud Build won't install CLI scripts from python packages, disable warnings
+    ]
+
+#################################################
+# Lint, code and secrets checks
+#################################################
+- id: GITLEAKS-CHECK
+  name: golang:1.17
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      set -e
+      go install github.com/zricethezav/gitleaks/v8@latest
+      gitleaks detect --redact --verbose --report-path=gitleaks_report.json --report-format=json --no-git
+  waitFor: [-]
+
+- id: BLACK-CHECK
+  name: 'python:3.10'
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: python3
+  args: ["-m", "black", ".", "--check"]
+  waitFor:
+    - INSTALL-PYTHON
+
+- id: ISORT-CHECK
+  name: 'python:3.10'  
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: python3
+  args: ["-m", "isort", ".", "--check-only"]
+  waitFor:
+    - INSTALL-PYTHON
+
+#################################################
+# Test and coverage checks
+#################################################
+- id: RUN-TESTS
+  name: 'python:3.10'
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: python3
+  # NOTE: Cloud Build Service Account may need ServiceAccountTokenCreator IAM Role on Project or project's Service Account level,
+  # if running any integration tests that will act as the project's configured Service Account
+  # NOTE: specifying the local.env service config, but could change this to a different one
+  args: ["./cli/main.py", "test", "local.env"]
+  waitFor:
+    - INSTALL-PYTHON
+
+- id: COVERAGE-CHECK
+  name: 'python:3.10'
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: python3
+  # Adjust desried minimum coverage value in flag below
+  args: ["-m", "coverage", "report", "--fail-under=50"]
+  waitFor:
+    - RUN-TESTS
+
+#################################################
+# Deploy
+#################################################
+- id: DEPLOY-CLOUD-RUN
+  name: 'gcr.io/cloud-builders/gcloud'
+  dir: "./examples/cicd-cloud-build-example"
+  entrypoint: 'bash'
+  args:
+    - -c
+    - |
+      # Exit when any command fails
+      set -e
+
+      # Lower case branch name and replace non-ascii characters with dash (need seperate variable to allow for manipulation)
+      BRANCH_="${BRANCH_NAME}"
+      echo "Triggered from branch $${BRANCH_}"
+
+      LOWER_BRANCH=$(echo "$${BRANCH_}" | iconv -c -t ascii//TRANSLIT | sed -E 's/[~^]+//g' | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr A-Z a-z)
+
+      # Limit version length. Cloud Run limit of 46 chars for trafic tag + service name, App Engine is 63
+      MAX_CHARS=46
+      SHORT_SHA_=${SHORT_SHA}
+      
+      CHAR_LIMIT=$(($${MAX_CHARS}-$${#SERVICE_NAME}-$${#SHORT_SHA_}-1))
+      
+      LOWER_BRANCH_SHORT=$${LOWER_BRANCH:0:$${CHAR_LIMIT}}
+
+      if [[ $${LOWER_BRANCH} == 'master' || $${LOWER_BRANCH} == 'main' ]] ; then
+        SERVICE_CONFIG_FILE=prod.env
+        TRAFFIC_PERC=100
+        VERSION=$${LOWER_BRANCH_SHORT}-${SHORT_SHA}
+      else
+        SERVICE_CONFIG_FILE=dev.env
+        TRAFFIC_PERC=0
+        VERSION=$${LOWER_BRANCH_SHORT}
+      fi
+
+      echo "Deploying $${SERVICE_NAME} with service config '$${SERVICE_CONFIG_FILE}', traffic=$${TRAFFIC_PERC}%, Version $${VERSION}"
+      
+      bash ./config/deploymnets/deploy_gcr.sh --service-config=$${SERVICE_CONFIG_FILE} --traffic-percent=$${TRAFFIC_PERC} --version=$${VERSION}
+      
+      echo "Deployment finished"

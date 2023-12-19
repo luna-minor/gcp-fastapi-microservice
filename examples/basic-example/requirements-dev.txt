@@ -13,3 +13,6 @@ httpx==0.24.1
 # CLI
 typer[all]==0.9.0
 rich==13.5.2
+
+# Also install base requirements.txt
+-r requirements.txt

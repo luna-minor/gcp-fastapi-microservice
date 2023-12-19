@@ -1,0 +1,6 @@
+default_context:
+  project_name: CICD - Cloud Build Example
+  project_description: A basic example project, using Cloud Build for CICD.
+  cicd: cloudbuild
+  default_gcp_project: PLACEHOLDER_GCP_PROJECT
+  default_gcp_region: us-west2

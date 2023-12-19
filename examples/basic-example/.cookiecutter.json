@@ -4,6 +4,7 @@
     "_output_dir": "/workspaces/gcp-fastapi-microservice/examples",
     "_repo_dir": "/workspaces/gcp-fastapi-microservice",
     "_template": "/workspaces/gcp-fastapi-microservice",
+    "cicd": null,
     "default_gcp_project": "PLACEHOLDER_GCP_PROJECT",
     "default_gcp_region": "us-west2",
     "default_service_account": "placeholder_service_account",

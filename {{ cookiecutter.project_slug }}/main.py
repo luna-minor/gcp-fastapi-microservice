@@ -2,15 +2,15 @@
 import os
 
 import uvicorn
-from fastapi import Depends, FastAPI
-
 from api.routers import health_check
 from config import logging_utils
 from config.gcp_env import GCP_ENV_DATA
 from config.service_config import SERVICE_CONFIG
+from fastapi import Depends, FastAPI
 
-
-logging_utils.init_logging(level=SERVICE_CONFIG.LOG_LEVEL, gcp_logging=GCP_ENV_DATA.IS_DEPLOYED)
+logging_utils.init_logging(
+    level=SERVICE_CONFIG.LOG_LEVEL, gcp_logging=GCP_ENV_DATA.IS_DEPLOYED
+)
 
 
 app = FastAPI(

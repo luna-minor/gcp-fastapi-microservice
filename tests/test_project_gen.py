@@ -1,20 +1,19 @@
 import logging
 import os
 import shutil
-import tempfile
 import subprocess
+import tempfile
 from typing import Optional
 
 import pytest
 from cookiecutter.main import cookiecutter
-
 
 logging.basicConfig(level="INFO")
 
 
 @pytest.fixture(scope="module")
 def temp_output_dir() -> str:
-    """ Create a temp directory to generate projects in for testing """
+    """Create a temp directory to generate projects in for testing"""
     temp_dir = tempfile.mkdtemp()
     logging.info(f"Created temp dir: {temp_dir}")
     return temp_dir
@@ -36,7 +35,9 @@ def gen_project(output_dir: str, template_values: dict) -> str:
     :return: Ccookiecutter output of the generated project directory.
     """
 
-    logging.info(f"Generating example project for project_slug={template_values['project_slug']}")
+    logging.info(
+        f"Generating example project for project_slug={template_values['project_slug']}"
+    )
 
     # Build cookiecutter project
     resp: str = cookiecutter(
@@ -51,7 +52,9 @@ def gen_project(output_dir: str, template_values: dict) -> str:
     return resp
 
 
-def run_script(root_dir: str, command: str, script_path: str, args: Optional[list] = None) -> subprocess.CompletedProcess:
+def run_script(
+    root_dir: str, command: str, script_path: str, args: Optional[list] = None
+) -> subprocess.CompletedProcess:
     """Run a script in a subprocess
 
     Args:
@@ -72,7 +75,6 @@ def run_script(root_dir: str, command: str, script_path: str, args: Optional[lis
     if args:
         command_args.append(args)
 
-
     logging.info(f"Running {command_args}")
 
     try:
@@ -86,9 +88,8 @@ def run_script(root_dir: str, command: str, script_path: str, args: Optional[lis
         )
     finally:
         os.chdir(inital_wdir)
-    
-    return resp
 
+    return resp
 
 
 @pytest.mark.parametrize("template_values", TEST_CONFIGS)
@@ -102,19 +103,31 @@ def test_project_gen(template_values: dict, temp_output_dir):
         temp_output_dir (_type_): A temp directory to generate projects in. Will be removed at test completion.
     """
 
-    generated_project_dir = gen_project(output_dir=temp_output_dir, template_values=template_values)
+    generated_project_dir = gen_project(
+        output_dir=temp_output_dir, template_values=template_values
+    )
 
     # Assert project dir exists
-    assert os.path.isdir(generated_project_dir), f"Project not found at {generated_project_dir}"
+    assert os.path.isdir(
+        generated_project_dir
+    ), f"Project not found at {generated_project_dir}"
 
     # Assert folder name matches project slug
     project_folder = os.path.basename(generated_project_dir)
-    assert project_folder == template_values["project_slug"], f"Generated project dir `{project_folder}` differs from exptect of `{template_values['project_slug']}`"
-
+    assert (
+        project_folder == template_values["project_slug"]
+    ), f"Generated project dir `{project_folder}` differs from exptect of `{template_values['project_slug']}`"
 
     # Run test scripts in sub-process, assert they pass
-    tests_resp = run_script(root_dir=generated_project_dir, command="python", script_path="cli/main.py", args="test")
+    tests_resp = run_script(
+        root_dir=generated_project_dir,
+        command="python",
+        script_path="cli/main.py",
+        args="test",
+    )
 
-    assert tests_resp.returncode == 0, f"Failed to pass tests in generated project with values={template_values}; got response: {tests_resp.stdout},{tests_resp.stderr}"
+    assert (
+        tests_resp.returncode == 0
+    ), f"Failed to pass tests in generated project with values={template_values}; got response: {tests_resp.stdout},{tests_resp.stderr}"
 
     return

@@ -3,7 +3,7 @@
     "project_name": "Hello World!",
     "project_slug": "{{ cookiecutter.project_name | slugify }}",
     "project_description": "",
-    "cicd": ["cloudbuild", None], 
+    "cicd": ["cloudbuild", null], 
     "default_gcp_project": "placeholder_project",
     "default_service_account": "placeholder_service_account",
     "default_gcp_region": [

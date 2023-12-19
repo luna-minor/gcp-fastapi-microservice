@@ -1,0 +1,17 @@
+# Create GitHub Build Trigger
+# https://cloud.google.com/sdk/gcloud/reference/beta/builds/triggers/create/github
+# https://cloud.google.com/config-connector/docs/reference/resource-docs/cloudbuild/cloudbuildtrigger
+
+name: cicd-cloud-build-example-push-to-main
+description: CICD - Cloud Build Example Push to Main Build Trigger
+filename: "./examples/cicd-cloud-build-example/cloudbuild/cloudbuild.yaml"
+includeBuildLogs: "INCLUDE_BUILD_LOGS_WITH_STATUS"
+github:
+  name: gcp-fastapi-microservice
+  owner: TEMP_PLACEHOLDER_GIT_OWNER
+  push:
+    branch: ^master|main$
+ignoredFiles:
+- '**/*.md'
+includedFiles:
+- "examples/cicd-cloud-build-example/**"

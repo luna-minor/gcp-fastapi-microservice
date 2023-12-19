@@ -1,0 +1,15 @@
+{
+    "cookiecutter": {
+    "__version": "0.0.1",
+    "_output_dir": "/workspaces/gcp-fastapi-microservice/examples",
+    "_repo_dir": "/workspaces/gcp-fastapi-microservice",
+    "_template": "/workspaces/gcp-fastapi-microservice",
+    "cicd": "cloudbuild",
+    "default_gcp_project": "PLACEHOLDER_GCP_PROJECT",
+    "default_gcp_region": "us-west2",
+    "default_service_account": "placeholder_service_account",
+    "project_description": "A basic example project, using Cloud Build for CICD.",
+    "project_name": "CICD - Cloud Build Example",
+    "project_slug": "cicd-cloud-build-example"
+}
+}

@@ -11,7 +11,9 @@ from fastapi import Request
 
 # FastAPI does not have a global context with the Request object like Flask,
 # using ContextVar to create one
-request_context_var: ContextVar[Optional[Request]] = ContextVar("request_context_var", default=None)
+request_context_var: ContextVar[Optional[Request]] = ContextVar(
+    "request_context_var", default=None
+)
 
 
 async def set_request_context(request: Request):
